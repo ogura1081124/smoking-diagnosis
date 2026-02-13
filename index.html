@@ -28,12 +28,14 @@
                   var(--bg);
       color:var(--text);
     }
-    .wrap{max-width:980px;margin:0 auto;padding:28px 16px 60px;}
+    .wrap{max-width:980px;margin:0 auto;padding:28px 16px 70px;}
     header{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
     .title{font-size:28px;font-weight:800;letter-spacing:.2px}
     .subtitle{color:var(--muted);font-size:14px;line-height:1.5}
+
     .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;align-items:start;}
     @media (max-width: 900px){ .grid{grid-template-columns:1fr;} }
+
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       border:1px solid var(--line);
@@ -43,7 +45,17 @@
     }
     .card h2{margin:0 0 10px;font-size:16px}
     .muted{color:var(--muted);font-size:13px}
-    label{display:block;margin:12px 0 6px;font-weight:700;font-size:13px;color:#d1d5db}
+
+    .progressWrap{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0 14px;}
+    .progressText{font-size:13px;color:#d1d5db;font-weight:800;}
+    .bar{flex:1;height:10px;background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:999px;overflow:hidden;}
+    .bar > div{height:100%;width:0%;background:linear-gradient(90deg, rgba(96,165,250,.95), rgba(59,130,246,.75));}
+
+    .q{display:none;margin-top:12px;padding:12px;border-radius:16px;border:1px solid var(--line);background:rgba(15,23,42,.45)}
+    .q.active{display:block}
+    .q.done{opacity:.85}
+    .qTitle{margin:0 0 8px;font-size:13px;color:#d1d5db;font-weight:900}
+
     input,select{
       width:100%;
       padding:12px 12px;
@@ -55,12 +67,13 @@
       font-size:15px;
     }
     input:focus,select:focus{border-color:rgba(96,165,250,.7);box-shadow:0 0 0 3px rgba(96,165,250,.15)}
+
     .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     @media (max-width: 520px){ .row{grid-template-columns:1fr;} }
 
     .btn{
       width:100%;
-      margin-top:14px;
+      margin-top:10px;
       padding:12px 14px;
       border:0;
       border-radius:14px;
@@ -70,7 +83,8 @@
       cursor:pointer;
       letter-spacing:.2px;
     }
-    .btn:hover{filter:brightness(1.03)}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+
     .btn2{
       width:100%;
       margin-top:10px;
@@ -82,6 +96,7 @@
       font-weight:800;
       cursor:pointer;
     }
+
     .kpi{
       display:grid;
       grid-template-columns:1fr 1fr;
@@ -95,6 +110,7 @@
       padding:12px;
     }
     .kpi .big{font-size:20px;font-weight:900;margin-top:4px}
+
     .chip{
       display:inline-flex;align-items:center;gap:8px;
       padding:8px 10px;border-radius:999px;
@@ -107,27 +123,13 @@
     .warn{background:var(--warn)}
     .bad{background:var(--bad)}
 
-    .result{
-      white-space:pre-wrap;
-      line-height:1.6;
-      font-size:14px;
-      color:#e5e7eb;
-    }
+    .result{white-space:pre-wrap;line-height:1.6;font-size:14px;color:#e5e7eb;}
     .divider{height:1px;background:var(--line);margin:12px 0}
-    .callout{
-      background: rgba(96,165,250,.12);
-      border:1px solid rgba(96,165,250,.22);
-      border-radius:16px;
-      padding:12px;
-      margin-top:12px;
-    }
+
+    .callout{background: rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.22);border-radius:16px;padding:12px;margin-top:12px;}
     .callout b{color:#dbeafe}
-    .footer{
-      margin-top:14px;
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.5;
-    }
+
+    .footer{margin-top:14px;color:var(--muted);font-size:12px;line-height:1.5}
   </style>
 </head>
 <body>
@@ -135,7 +137,7 @@
   <header>
     <div class="title">加熱式卒業診断（無料MVP）</div>
     <div class="subtitle">
-      30秒で「習慣型 / 代替型 / 依存型」を推定し、コストを見える化します。<br/>
+      1問ずつ回答していく形式です。回答すると次の質問が下に表示されます。<br/>
       ※医療行為ではありません。生活習慣を見直す参考情報です。
     </div>
   </header>
@@ -143,57 +145,78 @@
   <div class="grid">
     <!-- 入力 -->
     <div class="card">
-      <h2>質問（30秒）</h2>
+      <h2>質問</h2>
 
-      <label>現在の喫煙タイプ</label>
-      <select id="type">
-        <option value="heat">加熱式（Ploom / IQOS / glo）</option>
-        <option value="paper">紙巻き</option>
-        <option value="both">併用</option>
-      </select>
-
-      <div class="row">
-        <div>
-          <label>1日あたりの本数（20本＝1箱換算）</label>
-          <select id="sticks">
-            <option value="5">5本</option>
-            <option value="10">10本</option>
-            <option value="15">15本</option>
-            <option value="20" selected>20本（1箱）</option>
-            <option value="30">30本</option>
-          </select>
-        </div>
-        <div>
-          <label>喫煙歴（年）</label>
-          <input id="years" type="number" value="10" min="0" />
-        </div>
+      <div class="progressWrap">
+        <div id="progressText" class="progressText">1 / 6</div>
+        <div class="bar"><div id="progressBar"></div></div>
       </div>
 
-      <div class="row">
-        <div>
-          <label>1箱あたりの価格（円）</label>
-          <input id="price" type="number" value="600" min="0" />
-        </div>
-        <div>
-          <label>起床後、最初の1本は？</label>
-          <select id="morning">
-            <option value="5">5分以内</option>
-            <option value="30" selected>30分以内</option>
-            <option value="60">60分以内</option>
-            <option value="999">それ以上</option>
-          </select>
-        </div>
+      <!-- Q1 -->
+      <div class="q active" id="q1">
+        <div class="qTitle">Q1. 現在の喫煙タイプ</div>
+        <select id="type">
+          <option value="" selected disabled>選択してください</option>
+          <option value="heat">加熱式（Ploom / IQOS / glo）</option>
+          <option value="paper">紙巻き</option>
+          <option value="both">併用</option>
+        </select>
+        <button id="next1" class="btn" disabled>次へ</button>
       </div>
 
-      <label>辞めたい度（0〜10）</label>
-      <input id="motivation" type="number" value="7" min="0" max="10" />
+      <!-- Q2 -->
+      <div class="q" id="q2">
+        <div class="qTitle">Q2. 1日あたりの本数（20本＝1箱換算）</div>
+        <select id="sticks">
+          <option value="" selected disabled>選択してください</option>
+          <option value="5">5本</option>
+          <option value="10">10本</option>
+          <option value="15">15本</option>
+          <option value="20">20本（1箱）</option>
+          <option value="30">30本</option>
+        </select>
+        <button id="next2" class="btn" disabled>次へ</button>
+      </div>
 
-      <button class="btn" onclick="runDiagnosis()">診断する</button>
+      <!-- Q3 -->
+      <div class="q" id="q3">
+        <div class="qTitle">Q3. 喫煙歴（年）</div>
+        <input id="years" type="number" min="0" placeholder="例：10" />
+        <button id="next3" class="btn" disabled>次へ</button>
+      </div>
+
+      <!-- Q4 -->
+      <div class="q" id="q4">
+        <div class="qTitle">Q4. 1箱あたりの価格（円）</div>
+        <input id="price" type="number" min="0" placeholder="例：600" />
+        <button id="next4" class="btn" disabled>次へ</button>
+      </div>
+
+      <!-- Q5 -->
+      <div class="q" id="q5">
+        <div class="qTitle">Q5. 起床後、最初の1本は？</div>
+        <select id="morning">
+          <option value="" selected disabled>選択してください</option>
+          <option value="5">5分以内</option>
+          <option value="30">30分以内</option>
+          <option value="60">60分以内</option>
+          <option value="999">それ以上</option>
+        </select>
+        <button id="next5" class="btn" disabled>次へ</button>
+      </div>
+
+      <!-- Q6 -->
+      <div class="q" id="q6">
+        <div class="qTitle">Q6. 辞めたい度（0〜10）</div>
+        <input id="motivation" type="number" min="0" max="10" placeholder="例：7" />
+        <button id="next6" class="btn" disabled>診断へ</button>
+      </div>
+
+      <button id="runBtn" class="btn" style="display:none" onclick="runDiagnosis()">診断する</button>
       <button class="btn2" onclick="fillDemo()">デモ入力（1日1箱×10年）</button>
 
       <div class="footer">
-        ※このMVPは「見せる用」。社内提案ではまず体験が大事。<br/>
-        本番化する場合は、出典リンク・免責強化・年齢確認・データ保存（同意）などを追加します。
+        ※本番化する場合は、出典リンク・免責強化・年齢確認・データ保存（同意）などを追加します。
       </div>
     </div>
 
@@ -224,117 +247,188 @@
 
       <div class="divider"></div>
 
-      <div id="output" class="result muted">まだ診断されていません。左のフォームに入力して「診断する」を押してください。</div>
+      <div id="output" class="result muted">まだ診断されていません。左側の質問に回答してください。</div>
 
       <div id="cta" class="callout" style="display:none;">
         <b>次の一手：</b><span id="ctaText"></span>
       </div>
 
       <div class="footer">
-        ※健康リスクの表現は断定しません。提案資料では「公的機関の出典リンク」を必ず添付してください。
+        ※健康リスクの表現は断定しません。本番版では公的機関の出典リンクを必ず添付してください。
       </div>
     </div>
   </div>
 </div>
 
 <script>
-function yen(n){ return n.toLocaleString('ja-JP') + '円'; }
+  const TOTAL = 6;
 
-function fillDemo(){
-  document.getElementById('type').value = 'heat';
-  document.getElementById('sticks').value = '20';
-  document.getElementById('years').value = '10';
-  document.getElementById('price').value = '600';
-  document.getElementById('morning').value = '30';
-  document.getElementById('motivation').value = '7';
-  runDiagnosis();
-}
+  function yen(n){ return n.toLocaleString('ja-JP') + '円'; }
 
-function setChip(level, label){
-  const chip = document.getElementById('chip');
-  const dotClass = (level==='good') ? 'good' : (level==='bad') ? 'bad' : 'warn';
-  chip.innerHTML = `<span class="dot ${dotClass}"></span><span>${label}</span>`;
-}
-
-function runDiagnosis(){
-  const sticks = Number(document.getElementById('sticks').value);
-  const years = Number(document.getElementById('years').value);
-  const price = Number(document.getElementById('price').value);
-  const morning = Number(document.getElementById('morning').value);
-  const motivation = Number(document.getElementById('motivation').value);
-
-  // コスト計算
-  const packsPerDay = sticks / 20;
-  const dailyCost = packsPerDay * price;
-  const monthlyCost = dailyCost * 30;
-  const yearlyCost = dailyCost * 365;
-  const pastTotal = yearlyCost * years;
-  const future10y = yearlyCost * 10;
-
-  // KPI表示
-  document.getElementById('kpiMonth').textContent = yen(Math.round(monthlyCost));
-  document.getElementById('kpiYear').textContent  = yen(Math.round(yearlyCost));
-  document.getElementById('kpiPast').textContent  = yen(Math.round(pastTotal));
-  document.getElementById('kpi10y').textContent   = yen(Math.round(future10y));
-
-  // スコア判定（MVP用の簡易ロジック）
-  let score = 0;
-  // 起床後の早さ（依存度の指標）
-  if(morning <= 5) score += 3;
-  else if(morning <= 30) score += 2;
-  else if(morning <= 60) score += 1;
-
-  // 本数・年数
-  if(sticks >= 20) score += 2;
-  if(sticks >= 30) score += 1;
-  if(years >= 10) score += 1;
-
-  // 動機が低い（やめる気が薄い＝継続しがち）
-  if(motivation <= 3) score += 2;
-  else if(motivation <= 5) score += 1;
-
-  let tier = "軽度（習慣型）";
-  let tierLevel = "good";
-  let next = "まずは「喫煙所に行かない日」を週1回。7日チャレンジから始める。";
-  let msg = "依存というより「習慣」の可能性が高いです。辞めやすい側にいます。";
-
-  if(score >= 6){
-    tier = "重度（依存型）";
-    tierLevel = "bad";
-    next = "医療ルート（禁煙外来・オンライン禁煙治療）を検討。自力で苦しいのは普通です。";
-    msg = "起床直後の喫煙や本数から、依存が強い可能性があります。最短は医療ルートです。";
-  } else if(score >= 3){
-    tier = "中度（代替型）";
-    tierLevel = "warn";
-    next = "行為の置換が効きます。国内ニコチン0ディスポVAPEなど「移行ステップ」を使う。";
-    msg = "吸いごたえ／手持ち無沙汰の置換が鍵。やめる“方法”を変えると成功率が上がります。";
+  function setChip(level, label){
+    const chip = document.getElementById('chip');
+    const dotClass = (level==='good') ? 'good' : (level==='bad') ? 'bad' : 'warn';
+    chip.innerHTML = `<span class="dot ${dotClass}"></span><span>${label}</span>`;
   }
 
-  setChip(tierLevel, `【判定】あなたは：${tier}`);
+  function updateProgress(current){
+    document.getElementById('progressText').textContent = `${current} / ${TOTAL}`;
+    document.getElementById('progressBar').style.width = `${Math.round((current-1)/TOTAL*100)}%`;
+  }
 
-  const out = `■ いまの状態（推定）
-${msg}
+  function showQuestion(n){
+    const el = document.getElementById(`q${n}`);
+    el.classList.add('active');
+    updateProgress(n);
+    // 少し遅らせてスクロール（表示反映後）
+    setTimeout(() => el.scrollIntoView({behavior:'smooth', block:'start'}), 60);
+  }
 
-■ お金のシミュレーション（推定）
-・1日あたり：${yen(Math.round(dailyCost))}
-・1ヶ月あたり：${yen(Math.round(monthlyCost))}
-・1年あたり：${yen(Math.round(yearlyCost))}
-・過去${years}年の累計：${yen(Math.round(pastTotal))}
+  function markDone(n){
+    const el = document.getElementById(`q${n}`);
+    el.classList.remove('active');
+    el.classList.add('done');
+  }
 
-この支出は「固定費」として積み上がります。
+  function enableWhenValid(){
+    // Q1
+    document.getElementById('next1').disabled = !document.getElementById('type').value;
+    // Q2
+    document.getElementById('next2').disabled = !document.getElementById('sticks').value;
+    // Q3
+    const years = document.getElementById('years').value;
+    document.getElementById('next3').disabled = !(years !== '' && Number(years) >= 0);
+    // Q4
+    const price = document.getElementById('price').value;
+    document.getElementById('next4').disabled = !(price !== '' && Number(price) >= 0);
+    // Q5
+    document.getElementById('next5').disabled = !document.getElementById('morning').value;
+    // Q6
+    const mot = document.getElementById('motivation').value;
+    document.getElementById('next6').disabled = !(mot !== '' && Number(mot) >= 0 && Number(mot) <= 10);
+  }
 
-■ 健康について（一般論・断定しません）
-喫煙は心血管疾患や呼吸器疾患などのリスクを上げる可能性が指摘されています。
-※本番版では公的機関の出典リンクを併記してください。
+  // 進捗初期化
+  updateProgress(1);
 
-`;
-  document.getElementById('output').className = "result";
-  document.getElementById('output').textContent = out;
+  // 入力イベント（有効化）
+  ['type','sticks','morning'].forEach(id => {
+    document.getElementById(id).addEventListener('change', enableWhenValid);
+  });
+  ['years','price','motivation'].forEach(id => {
+    document.getElementById(id).addEventListener('input', enableWhenValid);
+  });
 
-  const cta = document.getElementById('cta');
-  document.getElementById('ctaText').textContent = next;
-  cta.style.display = "block";
-}
+  // 次へボタン
+  document.getElementById('next1').addEventListener('click', () => { markDone(1); showQuestion(2); });
+  document.getElementById('next2').addEventListener('click', () => { markDone(2); showQuestion(3); });
+  document.getElementById('next3').addEventListener('click', () => { markDone(3); showQuestion(4); });
+  document.getElementById('next4').addEventListener('click', () => { markDone(4); showQuestion(5); });
+  document.getElementById('next5').addEventListener('click', () => { markDone(5); showQuestion(6); });
+  document.getElementById('next6').addEventListener('click', () => {
+    markDone(6);
+    document.getElementById('runBtn').style.display = 'block';
+    document.getElementById('runBtn').scrollIntoView({behavior:'smooth', block:'start'});
+  });
+
+  function fillDemo(){
+    // 値を入れて順番に展開
+    document.getElementById('type').value = 'heat';
+    enableWhenValid();
+    document.getElementById('next1').click();
+
+    document.getElementById('sticks').value = '20';
+    enableWhenValid();
+    document.getElementById('next2').click();
+
+    document.getElementById('years').value = '10';
+    enableWhenValid();
+    document.getElementById('next3').click();
+
+    document.getElementById('price').value = '600';
+    enableWhenValid();
+    document.getElementById('next4').click();
+
+    document.getElementById('morning').value = '30';
+    enableWhenValid();
+    document.getElementById('next5').click();
+
+    document.getElementById('motivation').value = '7';
+    enableWhenValid();
+    document.getElementById('next6').click();
+
+    runDiagnosis();
+  }
+
+  function runDiagnosis(){
+    const sticks = Number(document.getElementById('sticks').value);
+    const years = Number(document.getElementById('years').value);
+    const price = Number(document.getElementById('price').value);
+    const morning = Number(document.getElementById('morning').value);
+    const motivation = Number(document.getElementById('motivation').value);
+
+    // コスト計算
+    const packsPerDay = sticks / 20;
+    const dailyCost = packsPerDay * price;
+    const monthlyCost = dailyCost * 30;
+    const yearlyCost = dailyCost * 365;
+    const pastTotal = yearlyCost * years;
+    const future10y = yearlyCost * 10;
+
+    // KPI表示
+    document.getElementById('kpiMonth').textContent = yen(Math.round(monthlyCost));
+    document.getElementById('kpiYear').textContent  = yen(Math.round(yearlyCost));
+    document.getElementById('kpiPast').textContent  = yen(Math.round(pastTotal));
+    document.getElementById('kpi10y').textContent   = yen(Math.round(future10y));
+
+    // スコア判定（MVP用の簡易ロジック）
+    let score = 0;
+    if(morning <= 5) score += 3;
+    else if(morning <= 30) score += 2;
+    else if(morning <= 60) score += 1;
+
+    if(sticks >= 20) score += 2;
+    if(sticks >= 30) score += 1;
+    if(years >= 10) score += 1;
+
+    if(motivation <= 3) score += 2;
+    else if(motivation <= 5) score += 1;
+
+    let tier = "軽度（習慣型）";
+    let tierLevel = "good";
+    let next = "まずは『喫煙所に行かない日』を週1回。7日チャレンジから始める。";
+    let msg = "依存というより『習慣』の可能性が高いです。辞めやすい側にいます。";
+
+    if(score >= 6){
+      tier = "重度（依存型）";
+      tierLevel = "bad";
+      next = "医療ルート（禁煙外来・オンライン禁煙治療）を検討。自力で苦しいのは普通です。";
+      msg = "起床直後の喫煙や本数から、依存が強い可能性があります。最短は医療ルートです。";
+    } else if(score >= 3){
+      tier = "中度（代替型）";
+      tierLevel = "warn";
+      next = "行為の置換が効きます。国内ニコチン0ディスポVAPEなど『移行ステップ』を使う。";
+      msg = "吸いごたえ／手持ち無沙汰の置換が鍵。やめる『方法』を変えると成功率が上がります。";
+    }
+
+    setChip(tierLevel, `【判定】あなたは：${tier}`);
+
+    const out = `■ いまの状態（推定）\n${msg}\n\n■ お金のシミュレーション（推定）\n・1日あたり：${yen(Math.round(dailyCost))}\n・1ヶ月あたり：${yen(Math.round(monthlyCost))}\n・1年あたり：${yen(Math.round(yearlyCost))}\n・過去${years}年の累計：${yen(Math.round(pastTotal))}\n\nこの支出は『固定費』として積み上がります。\n\n■ 健康について（一般論・断定しません）\n喫煙は心血管疾患や呼吸器疾患などのリスクを上げる可能性が指摘されています。\n※本番版では公的機関の出典リンクを併記してください。\n`;
+
+    document.getElementById('output').className = "result";
+    document.getElementById('output').textContent = out;
+
+    const cta = document.getElementById('cta');
+    document.getElementById('ctaText').textContent = next;
+    cta.style.display = "block";
+
+    // 進捗バーを満タン表示
+    document.getElementById('progressText').textContent = `${TOTAL} / ${TOTAL}`;
+    document.getElementById('progressBar').style.width = `100%`;
+  }
+
+  // 初回
+  enableWhenValid();
 </script>
 </body>
 </html>
