@@ -713,7 +713,7 @@
     <!-- ── 左：質問パネル ── -->
     <div class="card">
       <div class="card-title">
-        <div class="card-title-icon">??</div>
+        <div class="card-title-icon"></div>
         質問（全12問）
       </div>
 
@@ -988,12 +988,12 @@
             <div class="slider-value"><span id="motivationVal">5</span> <span>/ 10</span></div>
           </div>
         </div>
-        <button id="next12" class="btn-next" onclick="finishQuestions()">回答を完了する ?</button>
+        <button id="next12" class="btn-next" onclick="finishQuestions()">回答を完了する</button>
       </div>
 
       <!-- 診断ボタン -->
       <button id="btnDiagnose" class="btn-diagnose" onclick="runDiagnosis()">
-        ?? 依存度を診断する
+        依存度を診断する
       </button>
 
       <button class="btn-demo" onclick="fillDemo()">デモ入力（典型的な依存パターン）</button>
@@ -1006,13 +1006,13 @@
     <!-- ── 右：結果パネル ── -->
     <div class="card" id="resultCard">
       <div class="card-title">
-        <div class="card-title-icon">??</div>
+        <div class="card-title-icon"></div>
         診断結果
       </div>
 
       <!-- 診断前プレースホルダー -->
       <div id="resultPlaceholder" class="result-placeholder">
-        <div class="result-placeholder-icon">??</div>
+        <div class="result-placeholder-icon"></div>
         <div class="result-placeholder-text">
           左側の質問に回答すると<br>ここに診断結果が表示されます
         </div>
@@ -1024,8 +1024,8 @@
         <!-- 判定チップ -->
         <div id="verdictChip" class="verdict-chip">
           <div id="verdictDot" class="verdict-dot"></div>
-          <div id="verdictLabel" class="verdict-label">?</div>
-          <div id="verdictTier" class="verdict-tier">?</div>
+          <div id="verdictLabel" class="verdict-label"></div>
+          <div id="verdictTier" class="verdict-tier"></div>
         </div>
 
         <!-- スコアゲージ -->
@@ -1056,21 +1056,21 @@
             <div class="category-bar-bg">
               <div id="barPhysical" class="category-bar-fill" style="background:var(--bad)"></div>
             </div>
-            <div id="scorePhysical" class="category-bar-score">?</div>
+            <div id="scorePhysical" class="category-bar-score"></div>
           </div>
           <div class="category-bar-item">
             <div class="category-bar-label">心理的依存</div>
             <div class="category-bar-bg">
               <div id="barPsych" class="category-bar-fill" style="background:var(--warn)"></div>
             </div>
-            <div id="scorePsych" class="category-bar-score">?</div>
+            <div id="scorePsych" class="category-bar-score"></div>
           </div>
           <div class="category-bar-item">
             <div class="category-bar-label">行動的依存</div>
             <div class="category-bar-bg">
               <div id="barBehavior" class="category-bar-fill" style="background:var(--accent)"></div>
             </div>
-            <div id="scoreBehavior" class="category-bar-score">?</div>
+            <div id="scoreBehavior" class="category-bar-score"></div>
           </div>
         </div>
 
@@ -1080,19 +1080,19 @@
         <div class="kpi-grid">
           <div class="kpi-box">
             <div class="kpi-label">月あたり（推定）</div>
-            <div id="kpiMonth" class="kpi-value">?</div>
+            <div id="kpiMonth" class="kpi-value"></div>
           </div>
           <div class="kpi-box">
             <div class="kpi-label">年あたり（推定）</div>
-            <div id="kpiYear" class="kpi-value">?</div>
+            <div id="kpiYear" class="kpi-value"></div>
           </div>
           <div class="kpi-box">
             <div class="kpi-label">過去累計（推定）</div>
-            <div id="kpiPast" class="kpi-value">?</div>
+            <div id="kpiPast" class="kpi-value"></div>
           </div>
           <div class="kpi-box">
             <div class="kpi-label">今後10年（推定）</div>
-            <div id="kpi10y" class="kpi-value">?</div>
+            <div id="kpi10y" class="kpi-value"></div>
           </div>
         </div>
 
@@ -1101,7 +1101,7 @@
         <!-- 診断コメント -->
         <div id="resultComment" class="result-section">
           <div class="result-section-title">診断コメント</div>
-          <div id="commentText" class="result-text">?</div>
+          <div id="commentText" class="result-text"></div>
         </div>
 
         <!-- 次の一手 -->
