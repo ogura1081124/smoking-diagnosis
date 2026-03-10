@@ -3,432 +3,1432 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>加熱式卒業診断（MVP）</title>
+  <title>加熱式タバコ 依存度チェック</title>
   <style>
-    :root{
-      --bg:#0b0f17;
-      --card:#111827;
-      --card2:#0f172a;
-      --text:#e5e7eb;
-      --muted:#9ca3af;
-      --line:rgba(255,255,255,.10);
-      --accent:#60a5fa;
-      --good:#34d399;
-      --warn:#fbbf24;
-      --bad:#fb7185;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --radius:18px;
+    :root {
+      --bg: #080c14;
+      --card: #0f1623;
+      --card2: #0a1020;
+      --text: #e8eaf0;
+      --muted: #8b92a8;
+      --line: rgba(255,255,255,.09);
+      --accent: #5b9cf6;
+      --accent2: #7c6cf6;
+      --good: #34d399;
+      --warn: #fbbf24;
+      --bad: #f87171;
+      --critical: #ef4444;
+      --shadow: 0 12px 40px rgba(0,0,0,.45);
+      --radius: 20px;
+      --radius-sm: 14px;
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP";
-      background: radial-gradient(1200px 800px at 20% 0%, rgba(96,165,250,.18), transparent 60%),
-                  radial-gradient(900px 700px at 90% 10%, rgba(52,211,153,.12), transparent 55%),
-                  var(--bg);
-      color:var(--text);
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
     }
-    .wrap{max-width:980px;margin:0 auto;padding:28px 16px 70px;}
-    header{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
-    .title{font-size:28px;font-weight:800;letter-spacing:.2px}
-    .subtitle{color:var(--muted);font-size:14px;line-height:1.5}
 
-    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;align-items:start;}
-    @media (max-width: 900px){ .grid{grid-template-columns:1fr;} }
+    /* ── 背景グラデーション ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 1400px 700px at 15% -5%, rgba(91,156,246,.14), transparent 60%),
+        radial-gradient(ellipse 900px 600px at 85% 10%, rgba(124,108,246,.10), transparent 55%),
+        radial-gradient(ellipse 600px 400px at 50% 90%, rgba(52,211,153,.07), transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
 
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border:1px solid var(--line);
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 36px 20px 80px;
+    }
+
+    /* ── ヘッダー ── */
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: 999px;
+      background: rgba(91,156,246,.12);
+      border: 1px solid rgba(91,156,246,.25);
+      font-size: 12px;
+      font-weight: 700;
+      color: #93c5fd;
+      letter-spacing: .5px;
+      margin-bottom: 16px;
+    }
+    .title {
+      font-size: clamp(22px, 4vw, 32px);
+      font-weight: 900;
+      letter-spacing: -.3px;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #e8eaf0 0%, #93c5fd 50%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    /* ── メインレイアウト ── */
+    .grid {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── カード ── */
+    .card {
+      background: linear-gradient(160deg, rgba(255,255,255,.055) 0%, rgba(255,255,255,.025) 100%);
+      border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding:16px;
+      padding: 24px;
+      backdrop-filter: blur(8px);
     }
-    .card h2{margin:0 0 10px;font-size:16px}
-    .muted{color:var(--muted);font-size:13px}
-
-    .progressWrap{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0 14px;}
-    .progressText{font-size:13px;color:#d1d5db;font-weight:800;}
-    .bar{flex:1;height:10px;background:rgba(255,255,255,.08);border:1px solid var(--line);border-radius:999px;overflow:hidden;}
-    .bar > div{height:100%;width:0%;background:linear-gradient(90deg, rgba(96,165,250,.95), rgba(59,130,246,.75));}
-
-    .q{display:none;margin-top:12px;padding:12px;border-radius:16px;border:1px solid var(--line);background:rgba(15,23,42,.45)}
-    .q.active{display:block}
-    .q.done{opacity:.85}
-    .qTitle{margin:0 0 8px;font-size:13px;color:#d1d5db;font-weight:900}
-
-    input,select{
-      width:100%;
-      padding:12px 12px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background: rgba(15,23,42,.55);
-      color:var(--text);
-      outline:none;
-      font-size:15px;
+    .card-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #c7d0e8;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    input:focus,select:focus{border-color:rgba(96,165,250,.7);box-shadow:0 0 0 3px rgba(96,165,250,.15)}
-
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    @media (max-width: 520px){ .row{grid-template-columns:1fr;} }
-
-    .btn{
-      width:100%;
-      margin-top:10px;
-      padding:12px 14px;
-      border:0;
-      border-radius:14px;
-      background: linear-gradient(135deg, rgba(96,165,250,.95), rgba(59,130,246,.75));
-      color:#081018;
-      font-weight:900;
-      cursor:pointer;
-      letter-spacing:.2px;
-    }
-    .btn:disabled{opacity:.5;cursor:not-allowed}
-
-    .btn2{
-      width:100%;
-      margin-top:10px;
-      padding:12px 14px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.18);
-      background: rgba(15,23,42,.45);
-      color:var(--text);
-      font-weight:800;
-      cursor:pointer;
+    .card-title-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(91,156,246,.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
     }
 
-    .kpi{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-top:10px;
+    /* ── プログレスバー ── */
+    .progress-wrap {
+      margin-bottom: 20px;
     }
-    .kpi .box{
-      background: rgba(15,23,42,.55);
-      border:1px solid var(--line);
-      border-radius:16px;
-      padding:12px;
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
     }
-    .kpi .big{font-size:20px;font-weight:900;margin-top:4px}
-
-    .chip{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:8px 10px;border-radius:999px;
-      border:1px solid var(--line);
-      background: rgba(15,23,42,.55);
-      font-size:13px;font-weight:800;
+    .progress-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
     }
-    .dot{width:8px;height:8px;border-radius:50%}
-    .good{background:var(--good)}
-    .warn{background:var(--warn)}
-    .bad{background:var(--bad)}
+    .progress-count {
+      font-size: 13px;
+      font-weight: 900;
+      color: var(--accent);
+    }
+    .progress-bar-bg {
+      height: 6px;
+      background: rgba(255,255,255,.07);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 999px;
+      transition: width .5s cubic-bezier(.4,0,.2,1);
+    }
 
-    .result{white-space:pre-wrap;line-height:1.6;font-size:14px;color:#e5e7eb;}
-    .divider{height:1px;background:var(--line);margin:12px 0}
+    /* ── セクションラベル ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 20px 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
 
-    .callout{background: rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.22);border-radius:16px;padding:12px;margin-top:12px;}
-    .callout b{color:#dbeafe}
+    /* ── 質問ブロック ── */
+    .q {
+      display: none;
+      animation: fadeSlideIn .35s ease;
+    }
+    .q.active { display: block; }
+    .q.done { display: block; opacity: .6; pointer-events: none; }
 
-    .footer{margin-top:14px;color:var(--muted);font-size:12px;line-height:1.5}
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .q-block {
+      background: rgba(15,22,35,.5);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      margin-bottom: 10px;
+      transition: border-color .2s;
+    }
+    .q-block:has(.q-input:focus),
+    .q-block:has(select:focus) {
+      border-color: rgba(91,156,246,.4);
+    }
+    .q.done .q-block {
+      background: rgba(15,22,35,.3);
+    }
+
+    .q-num {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: 1px;
+      margin-bottom: 5px;
+    }
+    .q-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #d4d8e8;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+    .q-hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: -6px;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    /* ── 選択肢（ラジオボタン風） ── */
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .option-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .18s;
+      text-align: left;
+      width: 100%;
+    }
+    .option-btn:hover {
+      border-color: rgba(91,156,246,.35);
+      background: rgba(91,156,246,.08);
+    }
+    .option-btn.selected {
+      border-color: rgba(91,156,246,.6);
+      background: rgba(91,156,246,.15);
+      color: #bfdbfe;
+    }
+    .option-radio {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.2);
+      flex-shrink: 0;
+      transition: all .18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .option-btn.selected .option-radio {
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+    .option-btn.selected .option-radio::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #fff;
+    }
+
+    /* ── 数値入力 ── */
+    .q-input {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(15,23,42,.6);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .q-input:focus {
+      border-color: rgba(91,156,246,.6);
+      box-shadow: 0 0 0 3px rgba(91,156,246,.12);
+    }
+    .q-input::placeholder { color: rgba(139,146,168,.5); }
+
+    /* ── スライダー ── */
+    .slider-wrap {
+      padding: 4px 0 8px;
+    }
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      outline: none;
+      cursor: pointer;
+      -webkit-appearance: none;
+      background: rgba(255,255,255,.08);
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: 2px solid rgba(255,255,255,.3);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(91,156,246,.4);
+    }
+    .slider-value {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--accent);
+      margin-top: 8px;
+    }
+    .slider-value span {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    /* ── 次へボタン ── */
+    .btn-next {
+      width: 100%;
+      margin-top: 12px;
+      padding: 13px 16px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: .3px;
+      transition: opacity .2s, transform .15s;
+      box-shadow: 0 4px 16px rgba(91,156,246,.3);
+    }
+    .btn-next:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+    .btn-next:active:not(:disabled) { transform: translateY(0); }
+    .btn-next:disabled { opacity: .35; cursor: not-allowed; }
+
+    .btn-demo {
+      width: 100%;
+      margin-top: 8px;
+      padding: 11px 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-demo:hover { background: rgba(255,255,255,.08); color: var(--text); }
+
+    .btn-diagnose {
+      width: 100%;
+      margin-top: 16px;
+      padding: 15px 16px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      letter-spacing: .5px;
+      box-shadow: 0 4px 20px rgba(52,211,153,.3);
+      transition: opacity .2s, transform .15s;
+      display: none;
+    }
+    .btn-diagnose:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-diagnose.visible { display: block; animation: fadeSlideIn .4s ease; }
+
+    /* ── 結果パネル ── */
+    .result-placeholder {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+    }
+    .result-placeholder-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+      opacity: .4;
+    }
+    .result-placeholder-text {
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    /* ── 判定チップ ── */
+    .verdict-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(15,22,35,.5);
+      margin-bottom: 16px;
+    }
+    .verdict-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .verdict-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: #c7d0e8;
+    }
+    .verdict-tier {
+      margin-left: auto;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+
+    /* ── スコアゲージ ── */
+    .score-gauge-wrap {
+      margin-bottom: 18px;
+      background: rgba(15,22,35,.5);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+    }
+    .score-gauge-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+    .score-gauge-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .score-gauge-value {
+      font-size: 28px;
+      font-weight: 900;
+    }
+    .score-gauge-max {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .score-gauge-bg {
+      height: 14px;
+      background: linear-gradient(90deg,
+        rgba(52,211,153,.25) 0%,
+        rgba(251,191,36,.25) 33%,
+        rgba(248,113,113,.25) 66%,
+        rgba(239,68,68,.25) 100%
+      );
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 6px;
+      position: relative;
+    }
+    /* スケールマーカー */
+    .score-gauge-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent calc(25% - 1px),
+        rgba(0,0,0,.15) calc(25% - 1px),
+        rgba(0,0,0,.15) 25%
+      );
+      z-index: 2;
+    }
+    .score-gauge-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 1.2s cubic-bezier(.4,0,.2,1);
+      width: 0%;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 0 12px currentColor;
+    }
+    .score-gauge-ticks {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: rgba(139,146,168,.5);
+      margin-top: 4px;
+    }
+
+    /* ── KPIグリッド ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .kpi-box {
+      background: rgba(15,22,35,.55);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+    }
+    .kpi-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .kpi-value {
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    /* ── 依存度カテゴリバー ── */
+    .category-bars {
+      margin-bottom: 16px;
+      background: rgba(15,22,35,.5);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+    }
+    .category-bars-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      letter-spacing: .5px;
+      margin-bottom: 12px;
+    }
+    .category-bar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .category-bar-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+      width: 80px;
+      flex-shrink: 0;
+    }
+    .category-bar-bg {
+      flex: 1;
+      height: 8px;
+      background: rgba(255,255,255,.07);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .category-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 1.2s cubic-bezier(.4,0,.2,1);
+      width: 0%;
+    }
+    .category-bar-score {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      width: 28px;
+      text-align: right;
+    }
+
+    /* ── 結果テキスト ── */
+    .result-section {
+      background: rgba(15,22,35,.5);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .result-section-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: .5px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .result-text {
+      font-size: 13px;
+      color: #c7d0e8;
+      line-height: 1.7;
+    }
+
+    /* ── 次の一手 ── */
+    .cta-box {
+      background: linear-gradient(135deg, rgba(91,156,246,.1), rgba(124,108,246,.08));
+      border: 1px solid rgba(91,156,246,.2);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      margin-top: 12px;
+      display: none;
+    }
+    .cta-box.visible { display: block; animation: fadeSlideIn .5s ease; }
+    .cta-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #93c5fd;
+      letter-spacing: .5px;
+      margin-bottom: 8px;
+    }
+    .cta-steps {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .cta-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      color: #c7d0e8;
+      line-height: 1.5;
+    }
+    .cta-step-num {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(91,156,246,.2);
+      border: 1px solid rgba(91,156,246,.3);
+      color: #93c5fd;
+      font-size: 10px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ── フッター ── */
+    .footer-note {
+      margin-top: 16px;
+      font-size: 11px;
+      color: rgba(139,146,168,.6);
+      line-height: 1.6;
+    }
+
+    /* ── 完了済み質問のサマリ ── */
+    .done-summary {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    /* ── divider ── */
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 14px 0;
+    }
+
+    /* ── アニメーション ── */
+    @keyframes countUp {
+      from { opacity: 0; transform: scale(.8); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .animate-count { animation: countUp .5s ease forwards; }
   </style>
 </head>
 <body>
 <div class="wrap">
+  <!-- ヘッダー -->
   <header>
-    <div class="title">加熱式卒業診断（無料MVP）</div>
-    <div class="subtitle">
-      1問ずつ回答していく形式です。回答すると次の質問が下に表示されます。<br/>
+    <div class="badge">?? 依存度チェック</div>
+    <h1 class="title">加熱式タバコ 依存度診断</h1>
+    <p class="subtitle">
+      12の質問に答えるだけで、あなたのニコチン依存度を多角的に分析します。<br>
       ※医療行為ではありません。生活習慣を見直す参考情報です。
-    </div>
+    </p>
   </header>
 
   <div class="grid">
-    <!-- 入力 -->
+    <!-- ── 左：質問パネル ── -->
     <div class="card">
-      <h2>質問</h2>
-
-      <div class="progressWrap">
-        <div id="progressText" class="progressText">1 / 6</div>
-        <div class="bar"><div id="progressBar"></div></div>
+      <div class="card-title">
+        <div class="card-title-icon">??</div>
+        質問（全12問）
       </div>
+
+      <div class="progress-wrap">
+        <div class="progress-header">
+          <span class="progress-label">回答の進捗</span>
+          <span id="progressCount" class="progress-count">1 / 12</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div id="progressFill" class="progress-bar-fill"></div>
+        </div>
+      </div>
+
+      <!-- ─── セクション1：基本情報 ─── -->
+      <div class="section-label">基本情報</div>
 
       <!-- Q1 -->
       <div class="q active" id="q1">
-        <div class="qTitle">Q1. 現在の喫煙タイプ</div>
-        <select id="type">
-          <option value="" selected disabled>選択してください</option>
-          <option value="heat">加熱式（Ploom / IQOS / glo）</option>
-          <option value="paper">紙巻き</option>
-          <option value="both">併用</option>
-        </select>
-        <button id="next1" class="btn" disabled>次へ</button>
+        <div class="q-block">
+          <div class="q-num">Q 01</div>
+          <div class="q-title">現在使用している加熱式タバコのブランドは？</div>
+          <div class="options" id="opts1">
+            <button class="option-btn" data-val="iqos" onclick="selectOption(1,'iqos',this)">
+              <span class="option-radio"></span>IQOS（アイコス）
+            </button>
+            <button class="option-btn" data-val="ploom" onclick="selectOption(1,'ploom',this)">
+              <span class="option-radio"></span>Ploom（プルーム）
+            </button>
+            <button class="option-btn" data-val="glo" onclick="selectOption(1,'glo',this)">
+              <span class="option-radio"></span>glo（グロー）
+            </button>
+            <button class="option-btn" data-val="other_heat" onclick="selectOption(1,'other_heat',this)">
+              <span class="option-radio"></span>その他の加熱式
+            </button>
+            <button class="option-btn" data-val="both" onclick="selectOption(1,'both',this)">
+              <span class="option-radio"></span>加熱式＋紙巻き 併用
+            </button>
+          </div>
+        </div>
+        <button id="next1" class="btn-next" disabled onclick="goNext(1,2)">次の質問へ →</button>
       </div>
 
       <!-- Q2 -->
       <div class="q" id="q2">
-        <div class="qTitle">Q2. 1日あたりの本数（20本＝1箱換算）</div>
-        <select id="sticks">
-          <option value="" selected disabled>選択してください</option>
-          <option value="5">5本</option>
-          <option value="10">10本</option>
-          <option value="15">15本</option>
-          <option value="20">20本（1箱）</option>
-          <option value="30">30本</option>
-        </select>
-        <button id="next2" class="btn" disabled>次へ</button>
+        <div class="q-block">
+          <div class="q-num">Q 02</div>
+          <div class="q-title">1日あたりの使用本数は？</div>
+          <div class="q-hint">加熱式は1パック＝20本換算</div>
+          <div class="options" id="opts2">
+            <button class="option-btn" data-val="5" onclick="selectOption(2,'5',this)">
+              <span class="option-radio"></span>5本以下
+            </button>
+            <button class="option-btn" data-val="10" onclick="selectOption(2,'10',this)">
+              <span class="option-radio"></span>6?10本
+            </button>
+            <button class="option-btn" data-val="15" onclick="selectOption(2,'15',this)">
+              <span class="option-radio"></span>11?15本
+            </button>
+            <button class="option-btn" data-val="20" onclick="selectOption(2,'20',this)">
+              <span class="option-radio"></span>16?20本（1パック）
+            </button>
+            <button class="option-btn" data-val="30" onclick="selectOption(2,'30',this)">
+              <span class="option-radio"></span>21?30本
+            </button>
+            <button class="option-btn" data-val="40" onclick="selectOption(2,'40',this)">
+              <span class="option-radio"></span>31本以上
+            </button>
+          </div>
+        </div>
+        <button id="next2" class="btn-next" disabled onclick="goNext(2,3)">次の質問へ →</button>
       </div>
 
       <!-- Q3 -->
       <div class="q" id="q3">
-        <div class="qTitle">Q3. 喫煙歴（年）</div>
-        <input id="years" type="number" min="0" placeholder="例：10" />
-        <button id="next3" class="btn" disabled>次へ</button>
+        <div class="q-block">
+          <div class="q-num">Q 03</div>
+          <div class="q-title">喫煙歴は何年ですか？</div>
+          <input id="years" class="q-input" type="number" min="0" max="60" placeholder="例：10" oninput="checkInput(3,'years')"/>
+        </div>
+        <button id="next3" class="btn-next" disabled onclick="goNext(3,4)">次の質問へ →</button>
       </div>
 
       <!-- Q4 -->
       <div class="q" id="q4">
-        <div class="qTitle">Q4. 1箱あたりの価格（円）</div>
-        <input id="price" type="number" min="0" placeholder="例：600" />
-        <button id="next4" class="btn" disabled>次へ</button>
+        <div class="q-block">
+          <div class="q-num">Q 04</div>
+          <div class="q-title">1パック（箱）あたりの価格は？（円）</div>
+          <div class="q-hint">加熱式スティック1パック分の金額を入力してください</div>
+          <input id="price" class="q-input" type="number" min="0" placeholder="例：600" oninput="checkInput(4,'price')"/>
+        </div>
+        <button id="next4" class="btn-next" disabled onclick="goNext(4,5)">次の質問へ →</button>
       </div>
+
+      <!-- ─── セクション2：身体的依存 ─── -->
+      <div class="section-label" id="sec2label" style="display:none">身体的依存</div>
 
       <!-- Q5 -->
       <div class="q" id="q5">
-        <div class="qTitle">Q5. 起床後、最初の1本は？</div>
-        <select id="morning">
-          <option value="" selected disabled>選択してください</option>
-          <option value="5">5分以内</option>
-          <option value="30">30分以内</option>
-          <option value="60">60分以内</option>
-          <option value="999">それ以上</option>
-        </select>
-        <button id="next5" class="btn" disabled>次へ</button>
+        <div class="q-block">
+          <div class="q-num">Q 05</div>
+          <div class="q-title">起床後、最初の1本を吸うまでの時間は？</div>
+          <div class="q-hint">これはニコチン依存度の最も重要な指標のひとつです</div>
+          <div class="options" id="opts5">
+            <button class="option-btn" data-val="5" onclick="selectOption(5,'5',this)">
+              <span class="option-radio"></span>5分以内（強い依存のサイン）
+            </button>
+            <button class="option-btn" data-val="30" onclick="selectOption(5,'30',this)">
+              <span class="option-radio"></span>6?30分以内
+            </button>
+            <button class="option-btn" data-val="60" onclick="selectOption(5,'60',this)">
+              <span class="option-radio"></span>31?60分以内
+            </button>
+            <button class="option-btn" data-val="999" onclick="selectOption(5,'999',this)">
+              <span class="option-radio"></span>60分以上
+            </button>
+          </div>
+        </div>
+        <button id="next5" class="btn-next" disabled onclick="goNext(5,6)">次の質問へ →</button>
       </div>
 
       <!-- Q6 -->
       <div class="q" id="q6">
-        <div class="qTitle">Q6. 辞めたい度（0〜10）</div>
-        <input id="motivation" type="number" min="0" max="10" placeholder="例：7" />
-        <button id="next6" class="btn" disabled>診断へ</button>
+        <div class="q-block">
+          <div class="q-num">Q 06</div>
+          <div class="q-title">吸えない状況（会議・移動中など）でイライラや集中力の低下を感じますか？</div>
+          <div class="options" id="opts6">
+            <button class="option-btn" data-val="3" onclick="selectOption(6,'3',this)">
+              <span class="option-radio"></span>よくある（強く感じる）
+            </button>
+            <button class="option-btn" data-val="2" onclick="selectOption(6,'2',this)">
+              <span class="option-radio"></span>ときどきある
+            </button>
+            <button class="option-btn" data-val="1" onclick="selectOption(6,'1',this)">
+              <span class="option-radio"></span>あまりない
+            </button>
+            <button class="option-btn" data-val="0" onclick="selectOption(6,'0',this)">
+              <span class="option-radio"></span>ほとんどない
+            </button>
+          </div>
+        </div>
+        <button id="next6" class="btn-next" disabled onclick="goNext(6,7)">次の質問へ →</button>
       </div>
 
-      <button id="runBtn" class="btn" style="display:none" onclick="runDiagnosis()">診断する</button>
-      <button class="btn2" onclick="fillDemo()">デモ入力（1日1箱×10年）</button>
+      <!-- Q7 -->
+      <div class="q" id="q7">
+        <div class="q-block">
+          <div class="q-num">Q 07</div>
+          <div class="q-title">体調が悪い日（風邪・胃痛など）でも吸ってしまいますか？</div>
+          <div class="options" id="opts7">
+            <button class="option-btn" data-val="2" onclick="selectOption(7,'2',this)">
+              <span class="option-radio"></span>はい、吸ってしまう
+            </button>
+            <button class="option-btn" data-val="1" onclick="selectOption(7,'1',this)">
+              <span class="option-radio"></span>体調によっては吸う
+            </button>
+            <button class="option-btn" data-val="0" onclick="selectOption(7,'0',this)">
+              <span class="option-radio"></span>体調が悪いときは吸わない
+            </button>
+          </div>
+        </div>
+        <button id="next7" class="btn-next" disabled onclick="goNext(7,8)">次の質問へ →</button>
+      </div>
 
-      <div class="footer">
-        ※本番化する場合は、出典リンク・免責強化・年齢確認・データ保存（同意）などを追加します。
+      <!-- ─── セクション3：心理的・行動的依存 ─── -->
+      <div class="section-label" id="sec3label" style="display:none">心理的・行動的依存</div>
+
+      <!-- Q8 -->
+      <div class="q" id="q8">
+        <div class="q-block">
+          <div class="q-num">Q 08</div>
+          <div class="q-title">ストレスを感じたとき、反射的に吸いたくなりますか？</div>
+          <div class="options" id="opts8">
+            <button class="option-btn" data-val="3" onclick="selectOption(8,'3',this)">
+              <span class="option-radio"></span>必ずそうなる
+            </button>
+            <button class="option-btn" data-val="2" onclick="selectOption(8,'2',this)">
+              <span class="option-radio"></span>よくある
+            </button>
+            <button class="option-btn" data-val="1" onclick="selectOption(8,'1',this)">
+              <span class="option-radio"></span>ときどきある
+            </button>
+            <button class="option-btn" data-val="0" onclick="selectOption(8,'0',this)">
+              <span class="option-radio"></span>あまりない
+            </button>
+          </div>
+        </div>
+        <button id="next8" class="btn-next" disabled onclick="goNext(8,9)">次の質問へ →</button>
+      </div>
+
+      <!-- Q9 -->
+      <div class="q" id="q9">
+        <div class="q-block">
+          <div class="q-num">Q 09</div>
+          <div class="q-title">デバイスを忘れたり、スティックが切れたとき、どう感じますか？</div>
+          <div class="q-hint">加熱式タバコ特有の「デバイス依存」を測ります</div>
+          <div class="options" id="opts9">
+            <button class="option-btn" data-val="3" onclick="selectOption(9,'3',this)">
+              <span class="option-radio"></span>強い不安・焦りを感じる
+            </button>
+            <button class="option-btn" data-val="2" onclick="selectOption(9,'2',this)">
+              <span class="option-radio"></span>気になって落ち着かない
+            </button>
+            <button class="option-btn" data-val="1" onclick="selectOption(9,'1',this)">
+              <span class="option-radio"></span>少し不便に感じる程度
+            </button>
+            <button class="option-btn" data-val="0" onclick="selectOption(9,'0',this)">
+              <span class="option-radio"></span>特に気にならない
+            </button>
+          </div>
+        </div>
+        <button id="next9" class="btn-next" disabled onclick="goNext(9,10)">次の質問へ →</button>
+      </div>
+
+      <!-- Q10 -->
+      <div class="q" id="q10">
+        <div class="q-block">
+          <div class="q-num">Q 10</div>
+          <div class="q-title">喫煙できない場所・予定を、意識的に避けたことがありますか？</div>
+          <div class="options" id="opts10">
+            <button class="option-btn" data-val="2" onclick="selectOption(10,'2',this)">
+              <span class="option-radio"></span>よくある
+            </button>
+            <button class="option-btn" data-val="1" onclick="selectOption(10,'1',this)">
+              <span class="option-radio"></span>ときどきある
+            </button>
+            <button class="option-btn" data-val="0" onclick="selectOption(10,'0',this)">
+              <span class="option-radio"></span>ほとんどない
+            </button>
+          </div>
+        </div>
+        <button id="next10" class="btn-next" disabled onclick="goNext(10,11)">次の質問へ →</button>
+      </div>
+
+      <!-- ─── セクション4：減煙意欲 ─── -->
+      <div class="section-label" id="sec4label" style="display:none">減煙・禁煙への意欲</div>
+
+      <!-- Q11 -->
+      <div class="q" id="q11">
+        <div class="q-block">
+          <div class="q-num">Q 11</div>
+          <div class="q-title">過去に禁煙・減煙を試みたことがありますか？</div>
+          <div class="options" id="opts11">
+            <button class="option-btn" data-val="tried_failed" onclick="selectOption(11,'tried_failed',this)">
+              <span class="option-radio"></span>試みたが続かなかった
+            </button>
+            <button class="option-btn" data-val="tried_some" onclick="selectOption(11,'tried_some',this)">
+              <span class="option-radio"></span>少し減らせたことがある
+            </button>
+            <button class="option-btn" data-val="not_tried" onclick="selectOption(11,'not_tried',this)">
+              <span class="option-radio"></span>まだ試みたことがない
+            </button>
+            <button class="option-btn" data-val="no_intention" onclick="selectOption(11,'no_intention',this)">
+              <span class="option-radio"></span>やめるつもりはない
+            </button>
+          </div>
+        </div>
+        <button id="next11" class="btn-next" disabled onclick="goNext(11,12)">次の質問へ →</button>
+      </div>
+
+      <!-- Q12 -->
+      <div class="q" id="q12">
+        <div class="q-block">
+          <div class="q-num">Q 12</div>
+          <div class="q-title">今の「やめたい・減らしたい」気持ちはどのくらいですか？</div>
+          <div class="q-hint">0＝全くない　10＝強くやめたい</div>
+          <div class="slider-wrap">
+            <div class="slider-labels">
+              <span>0（全くない）</span>
+              <span>10（強くやめたい）</span>
+            </div>
+            <input type="range" id="motivation" min="0" max="10" value="5" oninput="updateSlider()"/>
+            <div class="slider-value"><span id="motivationVal">5</span> <span>/ 10</span></div>
+          </div>
+        </div>
+        <button id="next12" class="btn-next" onclick="finishQuestions()">回答を完了する ?</button>
+      </div>
+
+      <!-- 診断ボタン -->
+      <button id="btnDiagnose" class="btn-diagnose" onclick="runDiagnosis()">
+        ?? 依存度を診断する
+      </button>
+
+      <button class="btn-demo" onclick="fillDemo()">? デモ入力（典型的な依存パターン）</button>
+
+      <div class="footer-note">
+        ※本診断は医療診断ではありません。本番化の際は出典リンク・免責事項・年齢確認・データ保存同意を追加してください。
       </div>
     </div>
 
-    <!-- 結果 -->
-    <div class="card">
-      <h2>診断結果</h2>
+    <!-- ── 右：結果パネル ── -->
+    <div class="card" id="resultCard">
+      <div class="card-title">
+        <div class="card-title-icon">??</div>
+        診断結果
+      </div>
 
-      <div id="chip" class="chip"><span class="dot warn"></span><span>ここに判定が出ます</span></div>
-
-      <div class="kpi">
-        <div class="box">
-          <div class="muted">月あたり（推定）</div>
-          <div id="kpiMonth" class="big">—</div>
-        </div>
-        <div class="box">
-          <div class="muted">年あたり（推定）</div>
-          <div id="kpiYear" class="big">—</div>
-        </div>
-        <div class="box">
-          <div class="muted">過去累計（推定）</div>
-          <div id="kpiPast" class="big">—</div>
-        </div>
-        <div class="box">
-          <div class="muted">これから10年（推定）</div>
-          <div id="kpi10y" class="big">—</div>
+      <!-- 診断前プレースホルダー -->
+      <div id="resultPlaceholder" class="result-placeholder">
+        <div class="result-placeholder-icon">??</div>
+        <div class="result-placeholder-text">
+          左側の質問に回答すると<br>ここに診断結果が表示されます
         </div>
       </div>
 
-      <div class="divider"></div>
+      <!-- 診断結果（初期非表示） -->
+      <div id="resultContent" style="display:none">
 
-      <div id="output" class="result muted">まだ診断されていません。左側の質問に回答してください。</div>
+        <!-- 判定チップ -->
+        <div id="verdictChip" class="verdict-chip">
+          <div id="verdictDot" class="verdict-dot"></div>
+          <div id="verdictLabel" class="verdict-label">?</div>
+          <div id="verdictTier" class="verdict-tier">?</div>
+        </div>
 
-      <div id="cta" class="callout" style="display:none;">
-        <b>次の一手：</b><span id="ctaText"></span>
-      </div>
+        <!-- スコアゲージ -->
+        <div class="score-gauge-wrap">
+          <div class="score-gauge-header">
+            <span class="score-gauge-label">依存度スコア</span>
+            <span>
+              <span id="scoreVal" class="score-gauge-value">0</span>
+              <span class="score-gauge-max"> / 20</span>
+            </span>
+          </div>
+          <div class="score-gauge-bg">
+            <div id="scoreFill" class="score-gauge-fill"></div>
+          </div>
+          <div class="score-gauge-ticks">
+            <span>軽度</span>
+            <span>中度</span>
+            <span>重度</span>
+            <span>最重度</span>
+          </div>
+        </div>
 
-      <div class="footer">
-        ※健康リスクの表現は断定しません。本番版では公的機関の出典リンクを必ず添付してください。
+        <!-- カテゴリ別スコア -->
+        <div class="category-bars">
+          <div class="category-bars-title">?? カテゴリ別内訳</div>
+          <div class="category-bar-item">
+            <div class="category-bar-label">身体的依存</div>
+            <div class="category-bar-bg">
+              <div id="barPhysical" class="category-bar-fill" style="background:var(--bad)"></div>
+            </div>
+            <div id="scorePhysical" class="category-bar-score">?</div>
+          </div>
+          <div class="category-bar-item">
+            <div class="category-bar-label">心理的依存</div>
+            <div class="category-bar-bg">
+              <div id="barPsych" class="category-bar-fill" style="background:var(--warn)"></div>
+            </div>
+            <div id="scorePsych" class="category-bar-score">?</div>
+          </div>
+          <div class="category-bar-item">
+            <div class="category-bar-label">行動的依存</div>
+            <div class="category-bar-bg">
+              <div id="barBehavior" class="category-bar-fill" style="background:var(--accent)"></div>
+            </div>
+            <div id="scoreBehavior" class="category-bar-score">?</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- コスト KPI -->
+        <div class="kpi-grid">
+          <div class="kpi-box">
+            <div class="kpi-label">月あたり（推定）</div>
+            <div id="kpiMonth" class="kpi-value">?</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">年あたり（推定）</div>
+            <div id="kpiYear" class="kpi-value">?</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">過去累計（推定）</div>
+            <div id="kpiPast" class="kpi-value">?</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-label">今後10年（推定）</div>
+            <div id="kpi10y" class="kpi-value">?</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- 診断コメント -->
+        <div id="resultComment" class="result-section">
+          <div class="result-section-title">?? 診断コメント</div>
+          <div id="commentText" class="result-text">?</div>
+        </div>
+
+        <!-- 次の一手 -->
+        <div id="ctaBox" class="cta-box">
+          <div class="cta-title">?? あなたへの推奨アクション</div>
+          <ul id="ctaSteps" class="cta-steps"></ul>
+        </div>
+
+        <div class="footer-note">
+          ※健康リスクの表現は断定しません。本番版では公的機関の出典リンクを必ず添付してください。
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-  const TOTAL = 6;
+  const TOTAL = 12;
+  const answers = {};
 
-  function yen(n){ return n.toLocaleString('ja-JP') + '円'; }
-
-  function setChip(level, label){
-    const chip = document.getElementById('chip');
-    const dotClass = (level==='good') ? 'good' : (level==='bad') ? 'bad' : 'warn';
-    chip.innerHTML = `<span class="dot ${dotClass}"></span><span>${label}</span>`;
+  // ── ユーティリティ ──
+  function yen(n) {
+    return n.toLocaleString('ja-JP') + '円';
   }
 
-  function updateProgress(current){
-    document.getElementById('progressText').textContent = `${current} / ${TOTAL}`;
-    document.getElementById('progressBar').style.width = `${Math.round((current-1)/TOTAL*100)}%`;
+  function updateProgress(current) {
+    const pct = Math.round((current - 1) / TOTAL * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressCount').textContent = current + ' / ' + TOTAL;
   }
 
-  function showQuestion(n){
-    const el = document.getElementById(`q${n}`);
+  // ── 選択肢ボタン ──
+  function selectOption(qNum, val, btn) {
+    const container = document.getElementById('opts' + qNum);
+    container.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    answers['q' + qNum] = val;
+    document.getElementById('next' + qNum).disabled = false;
+  }
+
+  // ── 数値入力チェック ──
+  function checkInput(qNum, inputId) {
+    const val = document.getElementById(inputId).value;
+    const ok = val !== '' && Number(val) >= 0;
+    document.getElementById('next' + qNum).disabled = !ok;
+    if (ok) answers['q' + qNum] = val;
+  }
+
+  // ── スライダー ──
+  function updateSlider() {
+    const val = document.getElementById('motivation').value;
+    document.getElementById('motivationVal').textContent = val;
+    answers['q12'] = val;
+  }
+  // 初期値設定
+  answers['q12'] = '5';
+
+  // ── 質問表示 ──
+  function showQuestion(n) {
+    const el = document.getElementById('q' + n);
     el.classList.add('active');
     updateProgress(n);
-    // 少し遅らせてスクロール（表示反映後）
-    setTimeout(() => el.scrollIntoView({behavior:'smooth', block:'start'}), 60);
+
+    // セクションラベルの表示
+    if (n === 5) document.getElementById('sec2label').style.display = 'flex';
+    if (n === 8) document.getElementById('sec3label').style.display = 'flex';
+    if (n === 11) document.getElementById('sec4label').style.display = 'flex';
+
+    setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
   }
 
-  function markDone(n){
-    const el = document.getElementById(`q${n}`);
+  function markDone(n) {
+    const el = document.getElementById('q' + n);
     el.classList.remove('active');
     el.classList.add('done');
   }
 
-  function enableWhenValid(){
-    // Q1
-    document.getElementById('next1').disabled = !document.getElementById('type').value;
-    // Q2
-    document.getElementById('next2').disabled = !document.getElementById('sticks').value;
-    // Q3
-    const years = document.getElementById('years').value;
-    document.getElementById('next3').disabled = !(years !== '' && Number(years) >= 0);
-    // Q4
-    const price = document.getElementById('price').value;
-    document.getElementById('next4').disabled = !(price !== '' && Number(price) >= 0);
-    // Q5
-    document.getElementById('next5').disabled = !document.getElementById('morning').value;
-    // Q6
-    const mot = document.getElementById('motivation').value;
-    document.getElementById('next6').disabled = !(mot !== '' && Number(mot) >= 0 && Number(mot) <= 10);
+  function goNext(from, to) {
+    markDone(from);
+    showQuestion(to);
   }
 
-  // 進捗初期化
-  updateProgress(1);
-
-  // 入力イベント（有効化）
-  ['type','sticks','morning'].forEach(id => {
-    document.getElementById(id).addEventListener('change', enableWhenValid);
-  });
-  ['years','price','motivation'].forEach(id => {
-    document.getElementById(id).addEventListener('input', enableWhenValid);
-  });
-
-  // 次へボタン
-  document.getElementById('next1').addEventListener('click', () => { markDone(1); showQuestion(2); });
-  document.getElementById('next2').addEventListener('click', () => { markDone(2); showQuestion(3); });
-  document.getElementById('next3').addEventListener('click', () => { markDone(3); showQuestion(4); });
-  document.getElementById('next4').addEventListener('click', () => { markDone(4); showQuestion(5); });
-  document.getElementById('next5').addEventListener('click', () => { markDone(5); showQuestion(6); });
-  document.getElementById('next6').addEventListener('click', () => {
-    markDone(6);
-    document.getElementById('runBtn').style.display = 'block';
-    document.getElementById('runBtn').scrollIntoView({behavior:'smooth', block:'start'});
-  });
-
-  function fillDemo(){
-    // 値を入れて順番に展開
-    document.getElementById('type').value = 'heat';
-    enableWhenValid();
-    document.getElementById('next1').click();
-
-    document.getElementById('sticks').value = '20';
-    enableWhenValid();
-    document.getElementById('next2').click();
-
-    document.getElementById('years').value = '10';
-    enableWhenValid();
-    document.getElementById('next3').click();
-
-    document.getElementById('price').value = '600';
-    enableWhenValid();
-    document.getElementById('next4').click();
-
-    document.getElementById('morning').value = '30';
-    enableWhenValid();
-    document.getElementById('next5').click();
-
-    document.getElementById('motivation').value = '7';
-    enableWhenValid();
-    document.getElementById('next6').click();
-
-    runDiagnosis();
+  function finishQuestions() {
+    markDone(12);
+    const btn = document.getElementById('btnDiagnose');
+    btn.classList.add('visible');
+    setTimeout(() => btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+    document.getElementById('progressFill').style.width = '100%';
+    document.getElementById('progressCount').textContent = TOTAL + ' / ' + TOTAL;
   }
 
-  function runDiagnosis(){
-    const sticks = Number(document.getElementById('sticks').value);
-    const years = Number(document.getElementById('years').value);
-    const price = Number(document.getElementById('price').value);
-    const morning = Number(document.getElementById('morning').value);
-    const motivation = Number(document.getElementById('motivation').value);
+  // ── 診断ロジック ──
+  function runDiagnosis() {
+    const sticks   = Number(answers['q2'] || 10);
+    const years    = Number(document.getElementById('years').value || 0);
+    const price    = Number(document.getElementById('price').value || 600);
+    const morning  = Number(answers['q5'] || 60);
+    const withdraw = Number(answers['q6'] || 0);  // 禁断症状
+    const sickSmoke= Number(answers['q7'] || 0);  // 病気でも吸う
+    const stress   = Number(answers['q8'] || 0);  // ストレス依存
+    const device   = Number(answers['q9'] || 0);  // デバイス依存
+    const avoid    = Number(answers['q10'] || 0); // 場所回避
+    const pastTry  = answers['q11'] || 'not_tried';
+    const motivation = Number(document.getElementById('motivation').value || 5);
 
-    // コスト計算
+    // ── コスト計算 ──
     const packsPerDay = sticks / 20;
-    const dailyCost = packsPerDay * price;
+    const dailyCost   = packsPerDay * price;
     const monthlyCost = dailyCost * 30;
-    const yearlyCost = dailyCost * 365;
-    const pastTotal = yearlyCost * years;
-    const future10y = yearlyCost * 10;
+    const yearlyCost  = dailyCost * 365;
+    const pastTotal   = yearlyCost * years;
+    const future10y   = yearlyCost * 10;
 
-    // KPI表示
+    // ── スコア計算（最大20点） ──
+    // 身体的依存（最大8点）
+    let physicalScore = 0;
+    if (morning <= 5)       physicalScore += 4;
+    else if (morning <= 30) physicalScore += 3;
+    else if (morning <= 60) physicalScore += 1;
+    physicalScore += withdraw;   // 0-3
+    physicalScore += sickSmoke;  // 0-2
+    // 上限8点
+    physicalScore = Math.min(physicalScore, 8);
+
+    // 心理的依存（最大6点）
+    let psychScore = 0;
+    psychScore += stress;  // 0-3
+    psychScore += device;  // 0-3
+    psychScore = Math.min(psychScore, 6);
+
+    // 行動的依存（最大6点）
+    let behaviorScore = 0;
+    if (sticks >= 40) behaviorScore += 3;
+    else if (sticks >= 20) behaviorScore += 2;
+    else if (sticks >= 10) behaviorScore += 1;
+    if (years >= 15) behaviorScore += 2;
+    else if (years >= 5) behaviorScore += 1;
+    behaviorScore += avoid;  // 0-2
+    behaviorScore = Math.min(behaviorScore, 6);
+
+    const totalScore = physicalScore + psychScore + behaviorScore;
+
+    // ── 判定 ──
+    let tier, tierLevel, tierColor, comment, steps;
+
+    if (totalScore >= 15) {
+      tier = '最重度（強依存型）';
+      tierLevel = 'critical';
+      tierColor = '#ef4444';
+      comment = '身体的・心理的・行動的依存がいずれも高いレベルにあります。起床直後の喫煙衝動、禁断症状、ストレスとの強い結びつきが見られます。自力での禁煙は非常に困難なケースが多く、専門的なサポートが最も効果的です。';
+      steps = [
+        '禁煙外来・オンライン禁煙治療を受診する（保険適用あり）',
+        'バレニクリン（チャンピックス）などの禁煙補助薬を検討する',
+        '禁煙アプリで吸いたい衝動のパターンを記録する',
+        '信頼できる人に禁煙宣言をして、社会的サポートを得る'
+      ];
+    } else if (totalScore >= 10) {
+      tier = '重度（依存型）';
+      tierLevel = 'bad';
+      tierColor = '#f87171';
+      comment = 'ニコチン依存が身体・心理の両面で確認されます。特に禁断症状やストレス時の喫煙衝動が強く、意志力だけでの禁煙は難しい状態です。段階的なアプローチが有効です。';
+      steps = [
+        'まず1日の本数を20%減らすことを目標にする',
+        'ニコチンパッチ・ニコチンガムなどのNRT（ニコチン代替療法）を試す',
+        '「吸いたくなる状況」を書き出し、代替行動を決めておく',
+        '禁煙外来への相談も選択肢として検討する'
+      ];
+    } else if (totalScore >= 5) {
+      tier = '中度（習慣＋依存型）';
+      tierLevel = 'warn';
+      tierColor = '#fbbf24';
+      comment = '習慣的な喫煙パターンに加え、一部に依存的な要素が見られます。特定の状況（食後・ストレス時など）への結びつきが強い可能性があります。行動パターンの置き換えが効果的です。';
+      steps = [
+        '「吸わない時間帯」を1日30分から設定し、少しずつ延ばす',
+        '食後・コーヒーなど「セット習慣」を意識的に変える（散歩・ガムなど）',
+        'ニコチン0の電子タバコ（VAPE）を移行ステップとして検討する',
+        '週1回「吸わない日」チャレンジから始める'
+      ];
+    } else {
+      tier = '軽度（習慣型）';
+      tierLevel = 'good';
+      tierColor = '#34d399';
+      comment = '依存度は比較的低く、習慣的な喫煙が主体と考えられます。身体的な禁断症状は少ない可能性があり、行動パターンの見直しで減煙・禁煙に取り組みやすい状態です。';
+      steps = [
+        '「喫煙所に行かない日」を週1回設定する7日チャレンジから始める',
+        '1日の本数を記録し、自分の喫煙パターンを可視化する',
+        '吸いたくなる「トリガー」を特定し、代替行動を準備する',
+        '禁煙後の節約額を計算し、モチベーションに活用する'
+      ];
+    }
+
+    // ── KPI表示 ──
     document.getElementById('kpiMonth').textContent = yen(Math.round(monthlyCost));
     document.getElementById('kpiYear').textContent  = yen(Math.round(yearlyCost));
     document.getElementById('kpiPast').textContent  = yen(Math.round(pastTotal));
     document.getElementById('kpi10y').textContent   = yen(Math.round(future10y));
 
-    // スコア判定（MVP用の簡易ロジック）
-    let score = 0;
-    if(morning <= 5) score += 3;
-    else if(morning <= 30) score += 2;
-    else if(morning <= 60) score += 1;
+    // ── 判定チップ ──
+    document.getElementById('verdictDot').style.background = tierColor;
+    document.getElementById('verdictLabel').textContent = '依存度：' + tier;
+    const tierEl = document.getElementById('verdictTier');
+    tierEl.textContent = 'スコア ' + totalScore;
+    tierEl.style.background = tierColor + '22';
+    tierEl.style.color = tierColor;
+    tierEl.style.border = '1px solid ' + tierColor + '44';
 
-    if(sticks >= 20) score += 2;
-    if(sticks >= 30) score += 1;
-    if(years >= 10) score += 1;
+    // ── スコアゲージ ──
+    const pct = Math.round(totalScore / 20 * 100);
+    document.getElementById('scoreVal').textContent = totalScore;
+    document.getElementById('scoreVal').style.color = tierColor;
+    const gaugeGradients = {
+      good:     'linear-gradient(90deg, #34d399, #10b981)',
+      warn:     'linear-gradient(90deg, #34d399, #fbbf24)',
+      bad:      'linear-gradient(90deg, #34d399, #fbbf24, #f87171)',
+      critical: 'linear-gradient(90deg, #34d399, #fbbf24, #f87171, #ef4444)'
+    };
+    document.getElementById('scoreFill').style.background = gaugeGradients[tierLevel];
+    setTimeout(() => {
+      document.getElementById('scoreFill').style.width = pct + '%';
+    }, 100);
 
-    if(motivation <= 3) score += 2;
-    else if(motivation <= 5) score += 1;
+    // ── カテゴリバー ──
+    setTimeout(() => {
+      document.getElementById('barPhysical').style.width  = Math.round(physicalScore / 8 * 100) + '%';
+      document.getElementById('barPsych').style.width     = Math.round(psychScore / 6 * 100) + '%';
+      document.getElementById('barBehavior').style.width  = Math.round(behaviorScore / 6 * 100) + '%';
+    }, 200);
+    document.getElementById('scorePhysical').textContent = physicalScore + '/8';
+    document.getElementById('scorePsych').textContent    = psychScore + '/6';
+    document.getElementById('scoreBehavior').textContent = behaviorScore + '/6';
 
-    let tier = "軽度（習慣型）";
-    let tierLevel = "good";
-    let next = "まずは『喫煙所に行かない日』を週1回。7日チャレンジから始める。";
-    let msg = "依存というより『習慣』の可能性が高いです。辞めやすい側にいます。";
+    // ── コメント ──
+    document.getElementById('commentText').textContent = comment;
 
-    if(score >= 6){
-      tier = "重度（依存型）";
-      tierLevel = "bad";
-      next = "医療ルート（禁煙外来・オンライン禁煙治療）を検討。自力で苦しいのは普通です。";
-      msg = "起床直後の喫煙や本数から、依存が強い可能性があります。最短は医療ルートです。";
-    } else if(score >= 3){
-      tier = "中度（代替型）";
-      tierLevel = "warn";
-      next = "行為の置換が効きます。国内ニコチン0ディスポVAPEなど『移行ステップ』を使う。";
-      msg = "吸いごたえ／手持ち無沙汰の置換が鍵。やめる『方法』を変えると成功率が上がります。";
+    // ── CTA ──
+    const ctaList = document.getElementById('ctaSteps');
+    ctaList.innerHTML = '';
+    steps.forEach((step, i) => {
+      ctaList.innerHTML += `
+        <li class="cta-step">
+          <span class="cta-step-num">${i + 1}</span>
+          <span>${step}</span>
+        </li>`;
+    });
+
+    // ── 表示切り替え ──
+    document.getElementById('resultPlaceholder').style.display = 'none';
+    const rc = document.getElementById('resultContent');
+    rc.style.display = 'block';
+    rc.style.animation = 'fadeSlideIn .5s ease';
+    document.getElementById('ctaBox').classList.add('visible');
+
+    // スクロール（モバイル）
+    if (window.innerWidth < 860) {
+      setTimeout(() => {
+        document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 200);
     }
-
-    setChip(tierLevel, `【判定】あなたは：${tier}`);
-
-    const out = `■ いまの状態（推定）\n${msg}\n\n■ お金のシミュレーション（推定）\n・1日あたり：${yen(Math.round(dailyCost))}\n・1ヶ月あたり：${yen(Math.round(monthlyCost))}\n・1年あたり：${yen(Math.round(yearlyCost))}\n・過去${years}年の累計：${yen(Math.round(pastTotal))}\n\nこの支出は『固定費』として積み上がります。\n\n■ 健康について（一般論・断定しません）\n喫煙は心血管疾患や呼吸器疾患などのリスクを上げる可能性が指摘されています。\n※本番版では公的機関の出典リンクを併記してください。\n`;
-
-    document.getElementById('output').className = "result";
-    document.getElementById('output').textContent = out;
-
-    const cta = document.getElementById('cta');
-    document.getElementById('ctaText').textContent = next;
-    cta.style.display = "block";
-
-    // 進捗バーを満タン表示
-    document.getElementById('progressText').textContent = `${TOTAL} / ${TOTAL}`;
-    document.getElementById('progressBar').style.width = `100%`;
   }
 
-  // 初回
-  enableWhenValid();
+  // ── デモ入力 ──
+  function fillDemo() {
+    // Q1
+    const btn1 = document.querySelector('#opts1 [data-val="iqos"]');
+    selectOption(1, 'iqos', btn1);
+    goNext(1, 2);
+
+    // Q2
+    const btn2 = document.querySelector('#opts2 [data-val="20"]');
+    selectOption(2, '20', btn2);
+    goNext(2, 3);
+
+    // Q3
+    document.getElementById('years').value = '10';
+    checkInput(3, 'years');
+    goNext(3, 4);
+
+    // Q4
+    document.getElementById('price').value = '600';
+    checkInput(4, 'price');
+    goNext(4, 5);
+
+    // Q5
+    const btn5 = document.querySelector('#opts5 [data-val="30"]');
+    selectOption(5, '30', btn5);
+    goNext(5, 6);
+
+    // Q6
+    const btn6 = document.querySelector('#opts6 [data-val="2"]');
+    selectOption(6, '2', btn6);
+    goNext(6, 7);
+
+    // Q7
+    const btn7 = document.querySelector('#opts7 [data-val="1"]');
+    selectOption(7, '1', btn7);
+    goNext(7, 8);
+
+    // Q8
+    const btn8 = document.querySelector('#opts8 [data-val="2"]');
+    selectOption(8, '2', btn8);
+    goNext(8, 9);
+
+    // Q9
+    const btn9 = document.querySelector('#opts9 [data-val="2"]');
+    selectOption(9, '2', btn9);
+    goNext(9, 10);
+
+    // Q10
+    const btn10 = document.querySelector('#opts10 [data-val="1"]');
+    selectOption(10, '1', btn10);
+    goNext(10, 11);
+
+    // Q11
+    const btn11 = document.querySelector('#opts11 [data-val="tried_failed"]');
+    selectOption(11, 'tried_failed', btn11);
+    goNext(11, 12);
+
+    // Q12
+    document.getElementById('motivation').value = '7';
+    updateSlider();
+    finishQuestions();
+
+    runDiagnosis();
+  }
+
+  // 初期化
+  updateProgress(1);
 </script>
 </body>
 </html>
